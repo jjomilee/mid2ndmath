@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>일차함수 절편 퀴즈</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', 'Arial', sans-serif;
+      background: #f0f8ff;
+      text-align: center;
+      padding: 20px;
+      color: #333;
+      font-size: 16px;
+    }
+    h1 {
+      font-size: 1.6em;
+      margin-bottom: 20px;
+    }
+    .question {
+      font-size: 1.2em;
+      margin: 20px 0;
+    }
+    .input-group {
+      margin: 20px 0;
+    }
+    input {
+      font-size: 1em;
+      padding: 8px;
+      width: 100px;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      font-size: 1em;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      background-color: #388e3c;
+    }
+    #stats {
+      margin-top: 20px;
+      font-size: 1em;
+    }
+    #feedback {
+      margin-top: 20px;
+      font-size: 1em;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>📐 일차함수 절편 퀴즈</h1>
+  <div class="question" id="question">문제를 불러오는 중...</div>
+  <div class="input-group">
+    <label for="xInput">x절편 = </label><input type="text" id="xInput">
+    <label for="yInput">y절편 = </label><input type="text" id="yInput">
+  </div>
+  <button id="submitBtn" onclick="checkAnswer()">제출</button>
+  <button onclick="nextQuestion()">다음 문제</button>
+  <div id="feedback"></div>
+  <div id="stats">
+    총 문제 수: <span id="total">0</span> · 맞힌 수: <span id="correct">0</span> · 틀린 수: <span id="wrong">0</span>
+  </div>
+  <script>
+    let total = 0, correct = 0, wrong = 0;
+    let correctX = 0, correctY = 0;
+    let currentEquation = '';
+    let a = 1, b = 0;
+
+    function generateInterceptQuestion() {
+      a = Math.floor(Math.random() * 9) + 1;
+      b = Math.floor(Math.random() * 11) - 5;
+      correctX = -b / a;
+      correctY = b;
+
+      currentEquation = `y = ${a}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}`;
+
+      document.getElementById("question").innerText = `다음 함수의 x절편과 y절편을 구하세요:\n${currentEquation}`;
+      document.getElementById("xInput").value = '';
+      document.getElementById("yInput").value = '';
+      document.getElementById("submitBtn").disabled = false;
+      document.getElementById("feedback").innerText = '';
+    }
+
+    function parseFraction(input) {
+      if (input.includes('/')) {
+        const [numerator, denominator] = input.split('/').map(Number);
+        return numerator / denominator;
+      }
+      return parseFloat(input);
+    }
+
+    function toFractionString(num) {
+      const tolerance = 1.0E-6;
+      let h1 = 1, h2 = 0, k1 = 0, k2 = 1, b = num;
+      do {
+        let a = Math.floor(b);
+        let aux = h1;
+        h1 = a * h1 + h2;
+        h2 = aux;
+        aux = k1;
+        k1 = a * k1 + k2;
+        k2 = aux;
+        b = 1 / (b - a);
+      } while (Math.abs(num - h1 / k1) > num * tolerance);
+      return `${h1}/${k1}`;
+    }
+
+    function checkAnswer() {
+      const userXInput = document.getElementById("xInput").value.trim();
+      const userYInput = document.getElementById("yInput").value.trim();
+
+      const userX = parseFraction(userXInput);
+      const userY = parseFraction(userYInput);
+
+      if (isNaN(userX) || isNaN(userY)) {
+        document.getElementById("feedback").innerText = "⚠️ 유효한 숫자나 분수를 입력해주세요.";
+        return;
+      }
+
+      document.getElementById("submitBtn").disabled = true;
+      total++;
+
+      const xCorrect = Math.abs(userX - correctX) < 0.01;
+      const yCorrect = Math.abs(userY - correctY) < 0.01;
+
+      if (xCorrect && yCorrect) {
+        correct++;
+        document.getElementById("feedback").innerText = "✅ 정답입니다!";
+      } else {
+        wrong++;
+        const xStr = Number.isInteger(correctX) ? correctX : toFractionString(correctX);
+        document.getElementById("feedback").innerText = `❌ 오답입니다. 정답은 x절편 = ${xStr}, y절편 = ${correctY}입니다.`;
+      }
+
+      updateStats();
+    }
+
+    function updateStats() {
+      document.getElementById("total").innerText = total;
+      document.getElementById("correct").innerText = correct;
+      document.getElementById("wrong").innerText = wrong;
+    }
+
+    function nextQuestion() {
+      generateInterceptQuestion();
+    }
+
+    nextQuestion();
+  </script>
+  <br>
+   <a href="index.html" class="back">🏠 메인으로 돌아가기</a>
+</body>
+</html>
