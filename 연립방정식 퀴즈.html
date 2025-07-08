@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>연립일차방정식 퀴즈</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', 'Arial', sans-serif;
+      background: #f0f8ff;
+      text-align: center;
+      padding: 20px;
+      color: #333;
+      font-size: 16px;
+    }
+    h1 {
+      font-size: 1.6em;
+      margin-bottom: 20px;
+    }
+    .question {
+      font-size: 1.2em;
+      margin: 20px 0;
+      white-space: pre-line;
+    }
+    .input-group {
+      margin: 20px 0;
+    }
+    input {
+      font-size: 1em;
+      padding: 8px;
+      width: 100px;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      font-size: 1em;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      background-color: #388e3c;
+    }
+    #stats {
+      margin-top: 20px;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>📘 연립일차방정식</h1>
+  <div class="question" id="question">문제를 불러오는 중...</div>
+  <div class="input-group">
+    <label for="xInput">x = </label><input type="number" id="xInput">
+    <label for="yInput">y = </label><input type="number" id="yInput">
+  </div>
+  <button id="submitBtn" onclick="checkAnswer()">제출</button>
+  <button onclick="nextQuestion()">다음 문제</button>
+  <div id="stats">
+    총 문제 수: <span id="total">0</span> · 맞힌 수: <span id="correct">0</span> · 틀린 수: <span id="wrong">0</span>
+  </div>
+  <script>
+    let total = 0, correct = 0, wrong = 0;
+    let correctX = 0, correctY = 0;
+
+    function generateSystemQuestion() {
+      const a1 = Math.floor(Math.random() * 5) + 1;
+      const b1 = Math.floor(Math.random() * 5) + 1;
+      const a2 = Math.floor(Math.random() * 5) + 1;
+      const b2 = Math.floor(Math.random() * 5) + 1;
+      correctX = Math.floor(Math.random() * 5) + 1;
+      correctY = Math.floor(Math.random() * 5) + 1;
+
+      const c1 = a1 * correctX + b1 * correctY;
+      const c2 = a2 * correctX + b2 * correctY;
+
+      document.getElementById("question").innerText =
+        `다음 연립방정식을 풀어보세요:\n` +
+        `${a1}x + ${b1}y = ${c1}\n` +
+        `${a2}x + ${b2}y = ${c2}`;
+
+      document.getElementById("xInput").value = '';
+      document.getElementById("yInput").value = '';
+      document.getElementById("submitBtn").disabled = false;
+    }
+
+    function checkAnswer() {
+      const userX = parseInt(document.getElementById("xInput").value);
+      const userY = parseInt(document.getElementById("yInput").value);
+
+      if (isNaN(userX) || isNaN(userY)) {
+        alert("⚠️ x와 y 값을 모두 입력해주세요.");
+        return;
+      }
+
+      document.getElementById("submitBtn").disabled = true;
+
+      total++;
+      if (userX === correctX && userY === correctY) {
+        correct++;
+        alert("✅ 정답입니다!");
+      } else {
+        wrong++;
+        alert(`❌ 오답입니다. 정답은 x = ${correctX}, y = ${correctY}입니다.`);
+      }
+
+      updateStats();
+    }
+
+    function updateStats() {
+      document.getElementById("total").innerText = total;
+      document.getElementById("correct").innerText = correct;
+      document.getElementById("wrong").innerText = wrong;
+    }
+
+    function nextQuestion() {
+      generateSystemQuestion();
+    }
+
+    nextQuestion();
+  </script>
+  <br>
+   <a href="index.html" class="back">🏠 메인으로 돌아가기</a>
+</body>
+</html>
