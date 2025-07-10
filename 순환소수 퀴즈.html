@@ -70,7 +70,7 @@
       background-color: #1976d2;
     }
 
-    /* ⬇️ 숫자 위에 점 표시하는 스타일 */
+    /* ⬇️ 점 표시용 CSS */
     .dot-over {
       position: relative;
       display: inline-block;
@@ -104,22 +104,35 @@
   </div>
 
   <script>
+    // 순환소수와 분수 정보
     const problems = [
-      { decimal: '0.<span class="dot-over">3</span>', fraction: '1/3' },
-      { decimal: '0.<span class="dot-over">6</span>', fraction: '2/3' },
-      { decimal: '0.<span class="dot-over">1</span>', fraction: '1/9' },
-      { decimal: '0.<span class="dot-over">2</span>', fraction: '2/9' },
-      { decimal: '0.0<span class="dot-over">9</span>', fraction: '1/11' },
-      { decimal: '0.<span class="dot-over">45</span>', fraction: '5/11' },
-      { decimal: '0.<span class="dot-over">12</span>', fraction: '4/33' },
-      { decimal: '0.<span class="dot-over">7</span>', fraction: '7/9' },
-      { decimal: '0.0<span class="dot-over">8</span>', fraction: '8/99' },
-      { decimal: '0.<span class="dot-over">123</span>', fraction: '123/999' }
+      { nonRepeat: '0.', repeat: '3', fraction: '1/3' },
+      { nonRepeat: '0.', repeat: '6', fraction: '2/3' },
+      { nonRepeat: '0.', repeat: '1', fraction: '1/9' },
+      { nonRepeat: '0.', repeat: '2', fraction: '2/9' },
+      { nonRepeat: '0.0', repeat: '9', fraction: '1/11' },
+      { nonRepeat: '0.', repeat: '45', fraction: '5/11' },
+      { nonRepeat: '0.', repeat: '12', fraction: '4/33' },
+      { nonRepeat: '0.', repeat: '7', fraction: '7/9' },
+      { nonRepeat: '0.0', repeat: '8', fraction: '8/99' },
+      { nonRepeat: '0.', repeat: '123', fraction: '123/999' }
     ];
 
     let correctAnswer = "";
     let total = 0, correct = 0, wrong = 0;
     let questionLocked = false;
+
+    // 순환소수를 HTML 형식으로 생성
+    function formatRepeatingDecimal(nonRepeat, repeat) {
+      if (repeat.length === 1) {
+        return `${nonRepeat}<span class="dot-over">${repeat}</span>`;
+      } else {
+        const first = repeat[0];
+        const last = repeat[repeat.length - 1];
+        const middle = repeat.slice(1, -1);
+        return `${nonRepeat}<span class="dot-over">${first}</span>${middle}<span class="dot-over">${last}</span>`;
+      }
+    }
 
     function generateQuestion() {
       questionLocked = false;
@@ -133,7 +146,8 @@
       const problem = problems[randomIndex];
 
       correctAnswer = problem.fraction;
-      questionEl.innerHTML = `${problem.decimal} = ?`;
+      const decimalHTML = formatRepeatingDecimal(problem.nonRepeat, problem.repeat);
+      questionEl.innerHTML = `${decimalHTML} = ?`;
 
       const used = new Set();
       used.add(correctAnswer);
@@ -192,5 +206,6 @@
     generateQuestion();
     updateStats();
   </script>
+
 </body>
 </html>
