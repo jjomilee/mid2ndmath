@@ -90,137 +90,159 @@
     틀린 문제: <span id="wrong">0</span>
   </div>
 
-  <script>
-    const canvas = document.getElementById("graphCanvas");
-    const ctx = canvas.getContext("2d");
-    const canvasSize = 200;
-    const origin = canvasSize / 2;
-    const unit = 20;
+ <!-- 동일한 <head>, <style>은 생략 가능 -->
+<!-- <body> 태그 아래는 이전과 동일하므로 script 부분만 수정해서 붙여도 됩니다 -->
 
-    let correctAnswer = "";
-    let total = 0, correct = 0, wrong = 0;
-    let questionLocked = false;
+<script>
+  const canvas = document.getElementById("graphCanvas");
+  const ctx = canvas.getContext("2d");
+  const canvasSize = 200;
+  const origin = canvasSize / 2;
+  const unit = 20;
 
-    function drawGraph(m, b) {
-      ctx.clearRect(0, 0, canvasSize, canvasSize);
+  let correctAnswer = "";
+  let total = 0, correct = 0, wrong = 0;
+  let questionLocked = false;
 
-      // 좌표축
-      ctx.strokeStyle = "#000";
-      ctx.lineWidth = 2;
+  function drawGraph(m, b) {
+    ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+    // 좌표축
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, origin);
+    ctx.lineTo(canvasSize, origin);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(origin, 0);
+    ctx.lineTo(origin, canvasSize);
+    ctx.stroke();
+
+    // 축 이름
+    ctx.fillStyle = "#000";
+    ctx.font = "12px Arial";
+    ctx.fillText("x", canvasSize - 10, origin - 5);
+    ctx.fillText("y", origin + 5, 12);
+
+    // 원점
+    ctx.beginPath();
+    ctx.arc(origin, origin, 3, 0, 2 * Math.PI);
+    ctx.fillStyle = "red";
+    ctx.fill();
+
+    // 함수 그래프
+    ctx.strokeStyle = "blue";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    let started = false;
+
+    for (let x = -5; x <= 5; x += 0.1) {
+      const y = m * x + b;
+      const px = origin + x * unit;
+      const py = origin - y * unit;
+      if (!started) {
+        ctx.moveTo(px, py);
+        started = true;
+      } else {
+        ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+
+    // 좌표점 찍기
+    drawPointsOnGraph(m, b, ctx);
+  }
+
+  function drawPointsOnGraph(m, b, ctx) {
+    ctx.fillStyle = "blue";
+    ctx.font = "10px Arial";
+    for (let x = -5; x <= 5; x++) {
+      const y = m * x + b;
+      const px = origin + x * unit;
+      const py = origin - y * unit;
+
+      // 점
       ctx.beginPath();
-      ctx.moveTo(0, origin);
-      ctx.lineTo(canvasSize, origin);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(origin, 0);
-      ctx.lineTo(origin, canvasSize);
-      ctx.stroke();
-
-      // 축 이름
-      ctx.fillStyle = "#000";
-      ctx.font = "12px Arial";
-      ctx.fillText("x", canvasSize - 10, origin - 5);
-      ctx.fillText("y", origin + 5, 12);
-
-      // 원점
-      ctx.beginPath();
-      ctx.arc(origin, origin, 3, 0, 2 * Math.PI);
-      ctx.fillStyle = "red";
+      ctx.arc(px, py, 3, 0, 2 * Math.PI);
       ctx.fill();
 
-      // 함수 그래프
-      ctx.strokeStyle = "blue";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      let started = false;
+      // 텍스트
+      ctx.fillText(`(${x}, ${y})`, px + 5, py - 5);
+    }
+  }
 
-      for (let x = -5; x <= 5; x += 0.1) {
-        const y = m * x + b;
-        const px = origin + x * unit;
-        const py = origin - y * unit;
-        if (!started) {
-          ctx.moveTo(px, py);
-          started = true;
+  function generateQuestion() {
+    document.getElementById("feedback").innerText = '';
+    const choicesDiv = document.getElementById("choices");
+    choicesDiv.innerHTML = '';
+    questionLocked = false;
+
+    const m = Math.floor(Math.random() * 7) - 3;
+    const b = Math.floor(Math.random() * 9) - 4;
+    correctAnswer = `y = ${m}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}`;
+
+    drawGraph(m, b);
+
+    const used = new Set();
+    used.add(`${m},${b}`);
+    const answers = [];
+
+    const correctIndex = Math.floor(Math.random() * 5); // 0~4 중 정답 위치
+
+    for (let i = 0; i < 5; i++) {
+      let mi = m, bi = b;
+
+      if (i !== correctIndex) {
+        while (true) {
+          mi = Math.floor(Math.random() * 7) - 3;
+          bi = Math.floor(Math.random() * 9) - 4;
+          if (!used.has(`${mi},${bi}`)) {
+            used.add(`${mi},${bi}`);
+            break;
+          }
+        }
+      }
+
+      const expr = `y = ${mi}x ${bi >= 0 ? '+ ' + bi : '- ' + Math.abs(bi)}`;
+      answers.push(expr);
+    }
+
+    answers.forEach(ans => {
+      const btn = document.createElement("button");
+      btn.innerText = ans;
+      btn.className = "choice-btn";
+      btn.onclick = () => {
+        if (questionLocked) return;
+        questionLocked = true;
+        total++;
+
+        if (ans === correctAnswer) {
+          correct++;
+          document.getElementById("feedback").innerText = "✅ 정답입니다!";
+          document.getElementById("feedback").style.color = "green";
         } else {
-          ctx.lineTo(px, py);
-        }
-      }
-      ctx.stroke();
-    }
-
-    function generateQuestion() {
-      document.getElementById("feedback").innerText = '';
-      const choicesDiv = document.getElementById("choices");
-      choicesDiv.innerHTML = '';
-      questionLocked = false;
-
-      // 정답 그래프 m, b
-      const m = Math.floor(Math.random() * 7) - 3;
-      const b = Math.floor(Math.random() * 9) - 4;
-      correctAnswer = `y = ${m}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}`;
-
-      drawGraph(m, b);
-
-      const used = new Set();
-      used.add(`${m},${b}`);
-      const answers = [];
-
-      const correctIndex = Math.floor(Math.random() * 5); // 0~4 중 무작위
-
-      for (let i = 0; i < 5; i++) {
-        let mi = m, bi = b;
-
-        if (i !== correctIndex) {
-          while (true) {
-            mi = Math.floor(Math.random() * 7) - 3;
-            bi = Math.floor(Math.random() * 9) - 4;
-            if (!used.has(`${mi},${bi}`)) {
-              used.add(`${mi},${bi}`);
-              break;
-            }
-          }
+          wrong++;
+          document.getElementById("feedback").innerText = `❌ 틀렸어요. 정답은 ${correctAnswer}`;
+          document.getElementById("feedback").style.color = "red";
         }
 
-        const expr = `y = ${mi}x ${bi >= 0 ? '+ ' + bi : '- ' + Math.abs(bi)}`;
-        answers.push(expr);
-      }
+        updateStats();
+      };
+      choicesDiv.appendChild(btn);
+    });
+  }
 
-      // 보기 버튼 만들기
-      answers.forEach(ans => {
-        const btn = document.createElement("button");
-        btn.innerText = ans;
-        btn.className = "choice-btn";
-        btn.onclick = () => {
-          if (questionLocked) return;
-          questionLocked = true;
-          total++;
+  function updateStats() {
+    document.getElementById("total").innerText = total;
+    document.getElementById("correct").innerText = correct;
+    document.getElementById("wrong").innerText = wrong;
+  }
 
-          if (ans === correctAnswer) {
-            correct++;
-            document.getElementById("feedback").innerText = "✅ 정답입니다!";
-            document.getElementById("feedback").style.color = "green";
-          } else {
-            wrong++;
-            document.getElementById("feedback").innerText = `❌ 틀렸어요. 정답은 ${correctAnswer}`;
-            document.getElementById("feedback").style.color = "red";
-          }
-
-          updateStats();
-        };
-        choicesDiv.appendChild(btn);
-      });
-    }
-
-    function updateStats() {
-      document.getElementById("total").innerText = total;
-      document.getElementById("correct").innerText = correct;
-      document.getElementById("wrong").innerText = wrong;
-    }
-
-    generateQuestion();
-    updateStats();
-  </script>
+  generateQuestion();
+  updateStats();
+</script>
 
   <br>
   <a href="index.html" class="back">🏠 메인으로 돌아가기</a>
