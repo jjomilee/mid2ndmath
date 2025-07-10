@@ -2,14 +2,14 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>일차함수 그래프 맞히기</title>
+  <title>일차함수 식 맞히기</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       font-family: 'Arial', sans-serif;
       text-align: center;
       padding: 20px;
-      background: linear-gradient(to bottom right, #e0f7fa, #fff3e0);
+      background: linear-gradient(to bottom right, #fce4ec, #e3f2fd);
     }
 
     h1 {
@@ -17,31 +17,33 @@
       margin-bottom: 10px;
     }
 
-    #question {
-      font-size: 1.4em;
-      margin: 10px;
-    }
-
     canvas {
       border: 1px solid #aaa;
-      margin: 10px;
+      margin: 20px auto;
       background-color: #fff;
-      cursor: pointer;
     }
 
-    button {
-      font-size: 1em;
-      margin-top: 20px;
+    .choices {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .choice-btn {
+      font-size: 1.1em;
       padding: 10px 20px;
-      background-color: #2196F3;
+      background-color: #f06292;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      min-width: 140px;
     }
 
-    button:hover {
-      background-color: #1976D2;
+    .choice-btn:hover {
+      background-color: #ec407a;
     }
 
     .feedback {
@@ -55,22 +57,32 @@
       font-size: 1em;
     }
 
-    .canvas-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+    button.next-btn {
+      margin-top: 20px;
+      font-size: 1em;
+      padding: 10px 20px;
+      background-color: #42a5f5;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .next-btn:hover {
+      background-color: #1e88e5;
     }
   </style>
 </head>
 <body>
 
-  <h1>일차함수 그래프 맞히기</h1>
-  <p id="question">y = ?</p>
+  <h1>그래프를 보고 일차함수 식 맞히기</h1>
 
-  <div class="canvas-container" id="options"></div>
+  <canvas id="graphCanvas" width="200" height="200"></canvas>
+
+  <div class="choices" id="choices"></div>
 
   <p class="feedback" id="feedback"></p>
-  <button onclick="generateQuestion()">다음 문제</button>
+  <button class="next-btn" onclick="generateQuestion()">다음 문제</button>
 
   <div id="stats">
     총 문제: <span id="total">0</span> /
@@ -79,15 +91,17 @@
   </div>
 
   <script>
+    const canvas = document.getElementById("graphCanvas");
+    const ctx = canvas.getContext("2d");
     const canvasSize = 200;
     const origin = canvasSize / 2;
     const unit = 20;
 
-    let correctAnswerIndex = 0;
+    let correctAnswer = "";
     let total = 0, correct = 0, wrong = 0;
     let questionLocked = false;
 
-    function drawGraph(ctx, m, b) {
+    function drawGraph(m, b) {
       ctx.clearRect(0, 0, canvasSize, canvasSize);
 
       // 좌표축
@@ -119,8 +133,8 @@
       ctx.strokeStyle = "blue";
       ctx.lineWidth = 2;
       ctx.beginPath();
-
       let started = false;
+
       for (let x = -5; x <= 5; x += 0.1) {
         const y = m * x + b;
         const px = origin + x * unit;
@@ -136,26 +150,28 @@
     }
 
     function generateQuestion() {
-      const optionsDiv = document.getElementById("options");
-      optionsDiv.innerHTML = '';
       document.getElementById("feedback").innerText = '';
+      const choicesDiv = document.getElementById("choices");
+      choicesDiv.innerHTML = '';
       questionLocked = false;
 
-      const m = Math.floor(Math.random() * 7) - 3; // -3 ~ 3
-      const b = Math.floor(Math.random() * 9) - 4; // -4 ~ 4
-      document.getElementById("question").innerText = `y = ${m}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}`;
+      // 정답 그래프 m, b
+      const m = Math.floor(Math.random() * 7) - 3;
+      const b = Math.floor(Math.random() * 9) - 4;
+      correctAnswer = `y = ${m}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}`;
 
-      correctAnswerIndex = Math.floor(Math.random() * 4);
+      drawGraph(m, b);
+
       const used = new Set();
       used.add(`${m},${b}`);
+      const answers = [];
 
-      for (let i = 0; i < 4; i++) {
-        const canvas = document.createElement("canvas");
-        canvas.width = canvas.height = canvasSize;
-        const ctx = canvas.getContext("2d");
+      const correctIndex = Math.floor(Math.random() * 5); // 0~4 중 무작위
 
+      for (let i = 0; i < 5; i++) {
         let mi = m, bi = b;
-        if (i !== correctAnswerIndex) {
+
+        if (i !== correctIndex) {
           while (true) {
             mi = Math.floor(Math.random() * 7) - 3;
             bi = Math.floor(Math.random() * 9) - 4;
@@ -166,28 +182,34 @@
           }
         }
 
-        drawGraph(ctx, mi, bi);
+        const expr = `y = ${mi}x ${bi >= 0 ? '+ ' + bi : '- ' + Math.abs(bi)}`;
+        answers.push(expr);
+      }
 
-        canvas.onclick = () => {
+      // 보기 버튼 만들기
+      answers.forEach(ans => {
+        const btn = document.createElement("button");
+        btn.innerText = ans;
+        btn.className = "choice-btn";
+        btn.onclick = () => {
           if (questionLocked) return;
           questionLocked = true;
           total++;
 
-          if (i === correctAnswerIndex) {
+          if (ans === correctAnswer) {
             correct++;
             document.getElementById("feedback").innerText = "✅ 정답입니다!";
             document.getElementById("feedback").style.color = "green";
           } else {
             wrong++;
-            document.getElementById("feedback").innerText = "❌ 틀렸어요. 다시 도전!";
+            document.getElementById("feedback").innerText = `❌ 틀렸어요. 정답은 ${correctAnswer}`;
             document.getElementById("feedback").style.color = "red";
           }
 
           updateStats();
         };
-
-        optionsDiv.appendChild(canvas);
-      }
+        choicesDiv.appendChild(btn);
+      });
     }
 
     function updateStats() {
@@ -199,8 +221,8 @@
     generateQuestion();
     updateStats();
   </script>
-   <br>
-   
-   <a href="index.html" class="back">🏠 메인으로 돌아가기</a>
+
+  <br>
+  <a href="index.html" class="back">🏠 메인으로 돌아가기</a>
 </body>
 </html>
